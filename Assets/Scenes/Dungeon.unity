@@ -374,6 +374,14 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 669494482069483278, guid: 0632f1f30cd529b4eb318fb7f55a8c36, type: 3}
+      propertyPath: chaseSpeed
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 669494482069483278, guid: 0632f1f30cd529b4eb318fb7f55a8c36, type: 3}
+      propertyPath: obstacleMask.m_Bits
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 669494482069483278, guid: 0632f1f30cd529b4eb318fb7f55a8c36, type: 3}
       propertyPath: 'patrolPoints.Array.data[0]'
       value: 
       objectReference: {fileID: 1757183626}
@@ -395,11 +403,11 @@ PrefabInstance:
       objectReference: {fileID: 271183969}
     - target: {fileID: 1877607613930576522, guid: 0632f1f30cd529b4eb318fb7f55a8c36, type: 3}
       propertyPath: maxIntensity
-      value: 60
+      value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 1877607613930576522, guid: 0632f1f30cd529b4eb318fb7f55a8c36, type: 3}
       propertyPath: minIntensity
-      value: 15
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 5567603516457273899, guid: 0632f1f30cd529b4eb318fb7f55a8c36, type: 3}
       propertyPath: m_Name
