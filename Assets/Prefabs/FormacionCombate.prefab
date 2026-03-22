@@ -25,7 +25,7 @@ Transform:
   m_GameObject: {fileID: 1717700474321440325}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 7, y: 0.5, z: 0}
+  m_LocalPosition: {x: 7, y: 1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -63,6 +63,7 @@ Transform:
   - {fileID: 6713835208116850801}
   - {fileID: 3840649859530827570}
   - {fileID: 3579853420407047176}
+  - {fileID: 7153055630388437461}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &5532661448160883471
@@ -96,6 +97,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2768716152864097155}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+--- !u!1 &5913634952682506435
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7153055630388437461}
+  m_Layer: 0
+  m_Name: CameraFalloff
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7153055630388437461
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5913634952682506435}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.08445724, y: 0.9010989, z: -0.20389782, w: 0.37324736}
+  m_LocalPosition: {x: -9, y: 5.5, z: 8.2}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2768716152864097155}
+  m_LocalEulerAnglesHint: {x: 25.5, y: 135, z: 0}
 --- !u!1 &8319475699092528668
 GameObject:
   m_ObjectHideFlags: 0
@@ -120,10 +152,10 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8319475699092528668}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.20397624, y: 0.37296438, z: -0.08444282, w: 0.9011996}
-  m_LocalPosition: {x: -9.103512, y: 5.4497485, z: -8.213215}
+  m_LocalRotation: {x: 0.20389782, y: 0.37324736, z: -0.08445724, w: 0.9010989}
+  m_LocalPosition: {x: -9, y: 5.5, z: -8.2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2768716152864097155}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 25.5, y: 45, z: 0}

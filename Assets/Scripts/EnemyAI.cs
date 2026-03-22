@@ -4,7 +4,7 @@ using UnityEngine.AI;
 [RequireComponent(typeof(NavMeshAgent))]
 public class EnemyOverworldAI : MonoBehaviour
 {
-    public EnemyData enemyData; 
+    public SoulData enemyData; 
 
     [Header("Vision Settings")]
     public float viewRadius = 5f;

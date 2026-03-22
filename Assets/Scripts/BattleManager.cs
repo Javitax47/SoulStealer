@@ -29,7 +29,22 @@ public class BattleManager : MonoBehaviour
     public float flashDuration = 0.5f;  // Cuánto dura el destello
     public float shakeDuration = 0.3f;  // Cuánto dura el temblor
     public float shakeMagnitude = 0.3f; // Fuerza del temblor[Header("Efecto de Cámara 3D")]
-    public float combatFOV = 60f; 
+    public float combatFOV = 60f;
+
+    [Header("Lógica de Combate")]
+    public BattleState state;
+    private BattleUnit playerUnit;
+    private BattleUnit enemyUnit;
+
+    [Header("Ventaja Táctica")]
+    public int surpriseDamageAmount = 25; // Cuánto daño hace el ataque por la espalda[Header("Línea de Tiempo (UI)")]
+    
+    public Transform timelineContainer;   // Arrastra aquí tu Panel_Timeline
+    public TimelineSegment timelineSegmentPrefab; // Crearemos un prefab de UI muy simple para esto
+
+    private float playerGauge = 0f;
+    private float enemyGauge = 0f;
+    private const float turnThreshold = 100f;
 
     private Vector3 prevCameraPos;
     private Quaternion prevCameraRot;
@@ -47,9 +62,7 @@ public class BattleManager : MonoBehaviour
         else Destroy(gameObject);
     }
 
-    // AHORA RECIBIMOS LA VENTAJA Y LA PASAMOS A LA CORRUTINA
-    // AHORA RECIBIMOS LA VENTAJA Y LA PASAMOS A LA CORRUTINA
-    public void StartCombat(GameObject player, GameObject enemy, EnemyData enemyData, bool playerAdvantage)
+    public void StartCombat(GameObject player, GameObject enemy, SoulData enemyData, bool playerAdvantage)
     {
         currentPlayer = player;
         currentEnemy = enemy;
@@ -187,6 +200,36 @@ public class BattleManager : MonoBehaviour
 
         if (flashScreen != null) flashScreen.gameObject.SetActive(false); // Apagamos el destello
         if (combatUI != null) combatUI.SetActive(true);
+
+        playerUnit = currentPlayer.GetComponent<BattleUnit>();
+        enemyUnit = currentEnemy.GetComponent<BattleUnit>();
+
+        if (playerUnit != null) playerUnit.SetCombatMode(true);
+        if (enemyUnit != null) enemyUnit.SetCombatMode(true);
+
+        // Resetear los medidores
+        playerGauge = 0f;
+        enemyGauge = 0f;
+
+        if (playerAdvantage)
+        {
+            Debug.Log($"<color=green>¡GOLPE CRÍTICO SORPRESA! Enemigo recibe {surpriseDamageAmount} de daño.</color>");
+            enemyUnit.TakeDamage(surpriseDamageAmount);
+            
+            if (enemyUnit.currentHP <= 0)
+            {
+                state = BattleState.Won;
+                EndCombat();
+                yield break;
+            }
+            
+            // La ventaja hace que el jugador empiece con la barra llena automáticamente
+            playerGauge = turnThreshold; 
+        }
+
+        // Dejamos que el nuevo motor calcule quién va primero y arranque el bucle
+        DetermineNextTurn();
+
     }
 
     private Vector3 FindValidArenaCenter(Vector3 originalCenter)
@@ -326,5 +369,197 @@ public class BattleManager : MonoBehaviour
                 ? new Color(1f, 0f, 0f, 0.5f) : new Color(0f, 1f, 0f, 0.5f);
             Gizmos.DrawSphere(camTarget.position, cameraCollisionRadius);
         }
+    }
+    
+    public void OnPlayerUseSkill(int skillIndex)
+    {
+        if (state != BattleState.PlayerTurn) return;
+
+        SkillData skillUsed = playerUnit.baseData.skills[skillIndex];
+        
+        // Usamos la nueva matemática
+        int damage = CalculateDamage(playerUnit, enemyUnit, skillUsed);
+        enemyUnit.TakeDamage(damage);
+
+        if (enemyUnit.currentHP <= 0)
+        {
+            state = BattleState.Won;
+            Debug.Log("<color=green>¡Enemigo Derrotado!</color>");
+            EndCombat(); 
+        }
+        else
+        {
+            // El jugador atacó, cedemos el control al motor del tiempo
+            DetermineNextTurn(); 
+        }
+    }
+
+    private IEnumerator EnemyTurn()
+    {
+        yield return new WaitForSeconds(1.0f); // Pausa dramática
+
+        // --- IA INTELIGENTE ---
+        SkillData bestSkill = enemyUnit.baseData.skills[0];
+        int maxExpectedDamage = -1;
+
+        // El enemigo evalúa qué habilidad te hace más daño
+        foreach (SkillData skill in enemyUnit.baseData.skills)
+        {
+            int expectedDamage = CalculateDamage(enemyUnit, playerUnit, skill);
+            if (expectedDamage > maxExpectedDamage)
+            {
+                maxExpectedDamage = expectedDamage;
+                bestSkill = skill;
+            }
+        }
+        
+        Debug.Log($"El enemigo analizó tus stats y usa: {bestSkill.skillName}");
+        
+        // Ejecuta el mejor ataque
+        playerUnit.TakeDamage(maxExpectedDamage);
+
+        if (playerUnit.currentHP <= 0)
+        {
+            state = BattleState.Lost;
+            Debug.Log("<color=red>¡Has muerto! Fin de la partida.</color>");
+        }
+        else
+        {
+            // El enemigo atacó, cedemos el control al motor del tiempo
+            DetermineNextTurn(); 
+        }
+    }
+
+    private float GetElementalMultiplier(ElementType attackElement, ElementType defenderElement)
+    {
+        // GDD: Fantasmal vence a Físico, Físico vence a Mágico, Mágico vence a Fantasmal.
+        if (attackElement == ElementType.Fantasmal && defenderElement == ElementType.Fisico) return 1.5f; // Ventaja
+        if (attackElement == ElementType.Fisico && defenderElement == ElementType.Magico) return 1.5f;
+        if (attackElement == ElementType.Magico && defenderElement == ElementType.Fantasmal) return 1.5f;
+
+        // Resistencias (A la inversa)
+        if (attackElement == ElementType.Fisico && defenderElement == ElementType.Fantasmal) return 0.5f; // Débil
+        if (attackElement == ElementType.Magico && defenderElement == ElementType.Fisico) return 0.5f;
+        if (attackElement == ElementType.Fantasmal && defenderElement == ElementType.Magico) return 0.5f;
+
+        return 1.0f; // Elementos iguales o sin interacción
+    }
+
+    private int CalculateDamage(BattleUnit attacker, BattleUnit defender, SkillData skill)
+    {
+        // 1. Elegimos qué stats usar según el tipo de ataque (Físico o Mágico)
+        int atkStat = (skill.type == SkillType.Fisico) ? attacker.baseData.attack : attacker.baseData.magicAttack;
+        int defStat = (skill.type == SkillType.Fisico) ? defender.baseData.defense : defender.baseData.magicDefense;
+
+        // 2. Daño Base
+        float baseDamage = Mathf.Max(1, atkStat + skill.power - defStat);
+
+        // 3. Multiplicador Elemental
+        float multiplier = GetElementalMultiplier(skill.element, defender.baseData.element);
+        
+        if (multiplier > 1.0f) Debug.Log("<color=yellow>¡Ataque Súper Efectivo!</color>");
+        else if (multiplier < 1.0f) Debug.Log("<color=grey>Es poco efectivo...</color>");
+
+        return Mathf.Max(1, Mathf.RoundToInt(baseDamage * multiplier));
+    }
+
+    private void UpdateTimelineUI()
+    {
+        if (timelineContainer == null || timelineSegmentPrefab == null) return;
+
+        // 1. Crear un simulador de tiempo
+        BattleUnit[] turnPrediction = new BattleUnit[7];
+        float simPlayerGauge = playerGauge;
+        float simEnemyGauge = enemyGauge;
+
+        // Simulamos el futuro para adivinar los próximos 7 turnos
+        for (int i = 0; i < turnPrediction.Length; i++)
+        {
+            while (simPlayerGauge < turnThreshold && simEnemyGauge < turnThreshold)
+            {
+                simPlayerGauge += Mathf.Max(1, playerUnit.baseData.speed);
+                simEnemyGauge += Mathf.Max(1, enemyUnit.baseData.speed);
+            }
+
+            if (simPlayerGauge >= turnThreshold && simEnemyGauge >= turnThreshold)
+            {
+                if (simPlayerGauge >= simEnemyGauge) { turnPrediction[i] = playerUnit; simPlayerGauge -= turnThreshold; }
+                else { turnPrediction[i] = enemyUnit; simEnemyGauge -= turnThreshold; }
+            }
+            else if (simPlayerGauge >= turnThreshold)
+            {
+                turnPrediction[i] = playerUnit; simPlayerGauge -= turnThreshold;
+            }
+            else
+            {
+                turnPrediction[i] = enemyUnit; simEnemyGauge -= turnThreshold;
+            }
+        }
+
+        // 2. Dibujar la simulación en la Flecha (Reciclando los prefabs)
+        while (timelineContainer.childCount < turnPrediction.Length) Instantiate(timelineSegmentPrefab, timelineContainer);
+
+        for (int i = 0; i < timelineContainer.childCount; i++)
+        {
+            Transform child = timelineContainer.GetChild(i);
+            
+            if (i >= turnPrediction.Length)
+            {
+                child.gameObject.SetActive(false);
+                continue;
+            }
+
+            child.gameObject.SetActive(true);
+            TimelineSegment segmentUI = child.GetComponent<TimelineSegment>();
+            
+            bool isPlayer = (turnPrediction[i] == playerUnit);
+            bool isLast = (i == turnPrediction.Length - 1); 
+            Sprite soulIcon = turnPrediction[i].baseData.icon;
+
+            segmentUI.Setup(isPlayer, soulIcon, isLast);
+        }
+    }
+    
+    private void DetermineNextTurn()
+    {
+        // Hacemos avanzar el tiempo sumando la SPD hasta que alguien llegue a 100
+        while (playerGauge < turnThreshold && enemyGauge < turnThreshold)
+        {
+            // Protegemos con Mathf.Max para que si tienen 0 SPD el juego no se congele
+            playerGauge += Mathf.Max(1, playerUnit.baseData.speed);
+            enemyGauge += Mathf.Max(1, enemyUnit.baseData.speed);
+        }
+
+        // Si ambos llegan a la vez, desempata el que tenga más gauge o el jugador
+        if (playerGauge >= turnThreshold && enemyGauge >= turnThreshold)
+        {
+            if (playerGauge >= enemyGauge) AssignPlayerTurn();
+            else AssignEnemyTurn();
+        }
+        else if (playerGauge >= turnThreshold)
+        {
+            AssignPlayerTurn();
+        }
+        else
+        {
+            AssignEnemyTurn();
+        }
+    }
+
+    private void AssignPlayerTurn()
+    {
+        playerGauge -= turnThreshold; // Reseteamos su barra
+        state = BattleState.PlayerTurn;
+        UpdateTimelineUI();
+        Debug.Log("<color=cyan>¡Turno del Jugador!</color>");
+    }
+
+    private void AssignEnemyTurn()
+    {
+        enemyGauge -= turnThreshold; // Reseteamos su barra
+        state = BattleState.EnemyTurn;
+        UpdateTimelineUI();
+        Debug.Log("<color=orange>¡Turno del Enemigo!</color>");
+        StartCoroutine(EnemyTurn()); // Disparamos la IA
     }
 }

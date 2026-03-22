@@ -50,7 +50,23 @@ MonoBehaviour:
   combatFormationCenter: {fileID: 0}
   combatPlayerPos: {fileID: 0}
   combatEnemyPos: {fileID: 0}
-  combatCameraPos: {fileID: 0}
+  combatCameraPositions:
+  - {fileID: 0}
+  - {fileID: 0}
+  obstacleMask:
+    serializedVersion: 2
+    m_Bits: 4
+  cameraCollisionRadius: 10
+  characterCollisionRadius: 2
+  maxSearchDistance: 15
   transitionDuration: 1
   alignWithEngagement: 1
+  flashScreen: {fileID: 0}
+  flashDuration: 0.5
+  shakeDuration: 0.6
+  shakeMagnitude: 0.5
   combatFOV: 60
+  state: 0
+  surpriseDamageAmount: 25
+  timelineContainer: {fileID: 0}
+  timelineSegmentPrefab: {fileID: 1207369896386115391, guid: 2a53d2e089975814d937169b6e200450, type: 3}

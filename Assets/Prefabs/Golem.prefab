@@ -141,6 +141,7 @@ GameObject:
   - component: {fileID: 5436295899342722276}
   - component: {fileID: 4312569911267329597}
   - component: {fileID: 2313868964165071749}
+  - component: {fileID: 2675302874934345504}
   m_Layer: 3
   m_Name: Golem
   m_TagString: Player
@@ -279,3 +280,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   clickIndicator: {fileID: 0}
+--- !u!114 &2675302874934345504
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5367249581417021079}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f369458b099b81a4fb2afea9c5829612, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BattleUnit
+  baseData: {fileID: 11400000, guid: a1e74ac5e39426d4c92db92939aea635, type: 2}
+  currentHP: 40
+  localCombatUI: {fileID: 0}
+  hpSlider: {fileID: 0}
