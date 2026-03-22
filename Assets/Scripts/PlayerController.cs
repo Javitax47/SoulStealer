@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(NavMeshAgent))]
 public class PlayerController : MonoBehaviour
@@ -25,8 +26,11 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+
+        if (EventSystem.current.IsPointerOverGameObject()) return;
+
         if (!agent.isActiveAndEnabled || !agent.isOnNavMesh) return;
-        // Usamos GetMouseButton para el movimiento continuo
+        
         if (Input.GetMouseButton(0))
         {
             MoveToCursor();
@@ -63,6 +67,15 @@ public class PlayerController : MonoBehaviour
                 // Lo activamos para que sea visible
                 clickIndicator.SetActive(true);
             }
+        }
+    }
+
+    private void OnDisable()
+    {
+        // Apagamos el marcador visual del suelo
+        if (clickIndicator != null)
+        {
+            clickIndicator.SetActive(false);
         }
     }
 }

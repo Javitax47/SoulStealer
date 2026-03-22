@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UI; // ¡Necesario para controlar la imagen del destello!
 using System.Collections;
+using TMPro;
+using UnityEngine.SceneManagement;
 
 public class BattleManager : MonoBehaviour
 {
@@ -31,6 +33,9 @@ public class BattleManager : MonoBehaviour
     public float shakeMagnitude = 0.3f; // Fuerza del temblor[Header("Efecto de Cámara 3D")]
     public float combatFOV = 60f;
 
+    [Header("UI de Combate - Botones")]
+    public Button[] skillButtons;
+
     [Header("Lógica de Combate")]
     public BattleState state;
     private BattleUnit playerUnit;
@@ -45,6 +50,15 @@ public class BattleManager : MonoBehaviour
     private float playerGauge = 0f;
     private float enemyGauge = 0f;
     private const float turnThreshold = 100f;
+
+    [Header("Game Feel (Animaciones y Luces)")]
+    public Light turnSpotlight;         // El foco que iluminará a quien le toca
+    public float spotlightHeight = 5f;  // A qué altura flota el foco
+    
+    [Header("Pantalla de Cosecha")]
+    public GameObject harvestUI;
+    public UnityEngine.UI.Image harvestEnemyIcon;
+    public TMPro.TextMeshProUGUI harvestEnemyName;
 
     private Vector3 prevCameraPos;
     private Quaternion prevCameraRot;
@@ -192,43 +206,50 @@ public class BattleManager : MonoBehaviour
             yield return null;
         }
 
-        // --- 4. FINALIZAR TRANSICIÓN ---
+        // 4. FINALIZAR TRANSICIÓN (Posiciones exactas)
         mainCamera.transform.SetPositionAndRotation(targetCamPos, targetCamRot);
         mainCamera.fieldOfView = combatFOV;
         currentPlayer.transform.SetPositionAndRotation(targetPlayerPos, targetPlayerRot);
         currentEnemy.transform.SetPositionAndRotation(targetEnemyPos, targetEnemyRot);
 
-        if (flashScreen != null) flashScreen.gameObject.SetActive(false); // Apagamos el destello
+        // Apagar el destello y encender la UI de botones
+        if (flashScreen != null) flashScreen.gameObject.SetActive(false); 
         if (combatUI != null) combatUI.SetActive(true);
 
+        // --- 5. INICIAR LÓGICA DE TURNOS (¡AHORA SÍ!) ---
         playerUnit = currentPlayer.GetComponent<BattleUnit>();
         enemyUnit = currentEnemy.GetComponent<BattleUnit>();
 
         if (playerUnit != null) playerUnit.SetCombatMode(true);
         if (enemyUnit != null) enemyUnit.SetCombatMode(true);
 
-        // Resetear los medidores
         playerGauge = 0f;
         enemyGauge = 0f;
 
+        // Aplicamos la ventaja y el daño sorpresa YA CON LA CÁMARA EN SU SITIO
         if (playerAdvantage)
         {
             Debug.Log($"<color=green>¡GOLPE CRÍTICO SORPRESA! Enemigo recibe {surpriseDamageAmount} de daño.</color>");
             enemyUnit.TakeDamage(surpriseDamageAmount);
             
+            // Si el enemigo muere del golpe sorpresa, nos vamos directo a la Cosecha
             if (enemyUnit.currentHP <= 0)
             {
                 state = BattleState.Won;
-                EndCombat();
-                yield break;
+                EndCombatWithHarvest();
+                yield break; // Cortamos la corrutina aquí
             }
             
-            // La ventaja hace que el jugador empiece con la barra llena automáticamente
+            // Si sobrevive, el jugador tiene el medidor lleno
             playerGauge = turnThreshold; 
         }
 
-        // Dejamos que el nuevo motor calcule quién va primero y arranque el bucle
-        DetermineNextTurn();
+        // 6. CEDER EL CONTROL AL MOTOR DE TIEMPO
+        // Esto encenderá el foco en el personaje correcto al instante
+        DetermineNextTurn(); 
+        
+        // Actualizamos los botones por primera vez
+        UpdateSkillButtonsUI(state == BattleState.PlayerTurn);
 
     }
 
@@ -320,42 +341,57 @@ public class BattleManager : MonoBehaviour
         return targetPosition; 
     }
 
-    public void EndCombat()
+    private void EndCombatWithHarvest()
     {
-        StartCoroutine(TransitionToExplorationRoutine());
-    }
-
-    private IEnumerator TransitionToExplorationRoutine()
-    {
+        // 1. Apagar la UI de combate y las luces
         if (combatUI != null) combatUI.SetActive(false);
-        if (currentEnemy != null) Destroy(currentEnemy);
+        if (turnSpotlight != null) turnSpotlight.gameObject.SetActive(false);
 
-        Vector3 startCamPos = mainCamera.transform.position;
-        Quaternion startCamRot = mainCamera.transform.rotation;
-        Vector3 startPlayerPos = currentPlayer.transform.position;
-        
-        float elapsedTime = 0f;
-
-        while (elapsedTime < transitionDuration)
+        // --- NUEVO: EXTRAER LOS DATOS DEL ENEMIGO ANTES DE DESTRUIRLO ---
+        if (currentEnemy != null)
         {
-            elapsedTime += Time.deltaTime;
-            float t = Mathf.SmoothStep(0f, 1f, elapsedTime / transitionDuration);
-
-            mainCamera.transform.position = Vector3.Lerp(startCamPos, prevCameraPos, t);
-            mainCamera.transform.rotation = Quaternion.Slerp(startCamRot, prevCameraRot, t);
-            mainCamera.fieldOfView = Mathf.Lerp(combatFOV, prevFOV, t);
-
-            currentPlayer.transform.position = Vector3.Lerp(startPlayerPos, prevPlayerPos, t);
-
-            yield return null;
+            BattleUnit defeatedEnemy = currentEnemy.GetComponent<BattleUnit>();
+            
+            // Asignar el Icono
+            if (harvestEnemyIcon != null && defeatedEnemy.baseData.icon != null)
+            {
+                harvestEnemyIcon.sprite = defeatedEnemy.baseData.icon;
+                harvestEnemyIcon.color = Color.white; // Aseguramos que sea visible
+            }
+            
+            // Asignar el Nombre
+            if (harvestEnemyName != null)
+            {
+                harvestEnemyName.text = defeatedEnemy.baseData.soulName;
+            }
         }
 
+        // 2. Encender la Pantalla de Cosecha para tapar la cámara
+        if (harvestUI != null) harvestUI.SetActive(true);
+
+        // 3. El enemigo se desintegra / es cosechado
+        if (currentEnemy != null) Destroy(currentEnemy);
+
+        // 4. TELETRANSPORTE INSTANTÁNEO DE CÁMARA
+        mainCamera.transform.position = prevCameraPos;
+        mainCamera.transform.rotation = prevCameraRot;
+        mainCamera.fieldOfView = prevFOV;
         mainCamera.orthographic = prevOrthoState;
         mainCamera.orthographicSize = prevOrthoSize;
+        currentPlayer.transform.position = prevPlayerPos;
 
+        // 5. Devolver los controles 
         if (cameraScript != null) cameraScript.enabled = true;
         if (currentPlayer.TryGetComponent(out NavMeshAgent pAgent)) pAgent.enabled = true;
         if (currentPlayer.TryGetComponent(out MonoBehaviour pCtrl)) pCtrl.enabled = true;
+        if (currentPlayer.TryGetComponent(out Rigidbody pRb)) pRb.isKinematic = false;
+    }
+
+    // Esta función la llamarás desde un botón "Aceptar" en tu menú de Cosecha
+    public void CloseHarvestScreen()
+    {
+        if (harvestUI != null) harvestUI.SetActive(false);
+        Debug.Log("Volviendo a la exploración normal.");
     }
 
     private void OnDrawGizmosSelected()
@@ -370,39 +406,32 @@ public class BattleManager : MonoBehaviour
             Gizmos.DrawSphere(camTarget.position, cameraCollisionRadius);
         }
     }
-    
+
     public void OnPlayerUseSkill(int skillIndex)
     {
         if (state != BattleState.PlayerTurn) return;
+        
+        // --- NUEVO: Seguridad. Si el índice no existe, no hacemos nada ---
+        if (skillIndex >= playerUnit.baseData.skills.Count) return;
+
+        state = BattleState.Transitioning; 
+
+        // --- NUEVO: Apagar botones instantáneamente para evitar doble clic ---
+        UpdateSkillButtonsUI(false); 
 
         SkillData skillUsed = playerUnit.baseData.skills[skillIndex];
-        
-        // Usamos la nueva matemática
         int damage = CalculateDamage(playerUnit, enemyUnit, skillUsed);
-        enemyUnit.TakeDamage(damage);
-
-        if (enemyUnit.currentHP <= 0)
-        {
-            state = BattleState.Won;
-            Debug.Log("<color=green>¡Enemigo Derrotado!</color>");
-            EndCombat(); 
-        }
-        else
-        {
-            // El jugador atacó, cedemos el control al motor del tiempo
-            DetermineNextTurn(); 
-        }
+        
+        StartCoroutine(PerformAttackAnim(playerUnit, enemyUnit, damage));
     }
 
     private IEnumerator EnemyTurn()
     {
-        yield return new WaitForSeconds(1.0f); // Pausa dramática
+        yield return new WaitForSeconds(1.5f); // Piensa dos segundos
 
-        // --- IA INTELIGENTE ---
         SkillData bestSkill = enemyUnit.baseData.skills[0];
         int maxExpectedDamage = -1;
 
-        // El enemigo evalúa qué habilidad te hace más daño
         foreach (SkillData skill in enemyUnit.baseData.skills)
         {
             int expectedDamage = CalculateDamage(enemyUnit, playerUnit, skill);
@@ -413,21 +442,8 @@ public class BattleManager : MonoBehaviour
             }
         }
         
-        Debug.Log($"El enemigo analizó tus stats y usa: {bestSkill.skillName}");
-        
-        // Ejecuta el mejor ataque
-        playerUnit.TakeDamage(maxExpectedDamage);
-
-        if (playerUnit.currentHP <= 0)
-        {
-            state = BattleState.Lost;
-            Debug.Log("<color=red>¡Has muerto! Fin de la partida.</color>");
-        }
-        else
-        {
-            // El enemigo atacó, cedemos el control al motor del tiempo
-            DetermineNextTurn(); 
-        }
+        // Arrancar la animación
+        StartCoroutine(PerformAttackAnim(enemyUnit, playerUnit, maxExpectedDamage));
     }
 
     private float GetElementalMultiplier(ElementType attackElement, ElementType defenderElement)
@@ -519,6 +535,35 @@ public class BattleManager : MonoBehaviour
             segmentUI.Setup(isPlayer, soulIcon, isLast);
         }
     }
+
+    private void UpdateSkillButtonsUI(bool isPlayerTurn)
+    {
+        if (skillButtons == null || playerUnit == null) return;
+
+        for (int i = 0; i < skillButtons.Length; i++)
+        {
+            // Buscamos el componente de texto del botón (TextMeshPro)
+            TextMeshProUGUI btnText = skillButtons[i].GetComponentInChildren<TextMeshProUGUI>();
+            // (Si usaste botones antiguos de Unity, cambia TextMeshProUGUI por Text)
+
+            if (i < playerUnit.baseData.skills.Count)
+            {
+                // El personaje SÍ tiene una habilidad en este hueco
+                if (btnText != null) btnText.text = playerUnit.baseData.skills[i].skillName;
+                
+                // Solo se puede pulsar si es el turno del jugador
+                skillButtons[i].interactable = isPlayerTurn; 
+            }
+            else
+            {
+                // El personaje NO tiene habilidad en este hueco
+                if (btnText != null) btnText.text = "---";
+                
+                // Botón bloqueado (grisáceo y no clickeable)
+                skillButtons[i].interactable = false; 
+            }
+        }
+    }
     
     private void DetermineNextTurn()
     {
@@ -548,18 +593,131 @@ public class BattleManager : MonoBehaviour
 
     private void AssignPlayerTurn()
     {
-        playerGauge -= turnThreshold; // Reseteamos su barra
+        playerGauge -= turnThreshold;
         state = BattleState.PlayerTurn;
         UpdateTimelineUI();
-        Debug.Log("<color=cyan>¡Turno del Jugador!</color>");
+        
+        // --- NUEVO: Encender botones ---
+        UpdateSkillButtonsUI(true); 
+
+        if (turnSpotlight != null)
+        {
+            turnSpotlight.gameObject.SetActive(true);
+            turnSpotlight.transform.position = playerUnit.transform.position + Vector3.up * spotlightHeight;
+            turnSpotlight.transform.rotation = Quaternion.Euler(90f, 0f, 0f); 
+        }
     }
 
     private void AssignEnemyTurn()
     {
-        enemyGauge -= turnThreshold; // Reseteamos su barra
+        enemyGauge -= turnThreshold;
         state = BattleState.EnemyTurn;
         UpdateTimelineUI();
-        Debug.Log("<color=orange>¡Turno del Enemigo!</color>");
-        StartCoroutine(EnemyTurn()); // Disparamos la IA
+        
+        // --- NUEVO: Apagar botones ---
+        UpdateSkillButtonsUI(false); 
+
+        if (turnSpotlight != null)
+        {
+            turnSpotlight.gameObject.SetActive(true);
+            turnSpotlight.transform.position = enemyUnit.transform.position + Vector3.up * spotlightHeight;
+            turnSpotlight.transform.rotation = Quaternion.Euler(90f, 0f, 0f); 
+        }
+        
+        StartCoroutine(EnemyTurn());
+    }
+
+    // --- NUEVO: ANIMACIÓN FÍSICA DE ATAQUE ---
+    private IEnumerator PerformAttackAnim(BattleUnit attacker, BattleUnit defender, int damage)
+    {
+        // 1. Apagar temporalmente el foco durante la animación
+        if (turnSpotlight != null) turnSpotlight.gameObject.SetActive(false);
+
+        Vector3 originalPos = attacker.transform.position;
+        // Calculamos un punto un poco más adelante hacia el enemigo
+        Vector3 attackPos = originalPos + (defender.transform.position - originalPos).normalized * 1.5f;
+
+        // 2. Saltar hacia adelante (Ataque)
+        float t = 0;
+        while (t < 1)
+        {
+            t += Time.deltaTime * 6f; // Velocidad del salto
+            attacker.transform.position = Vector3.Lerp(originalPos, attackPos, t);
+            yield return null;
+        }
+
+        // 3. ¡Impacto!
+        defender.TakeDamage(damage);
+
+        // 4. Volver atrás a su posición original
+        t = 0;
+        while (t < 1)
+        {
+            t += Time.deltaTime * 6f;
+            attacker.transform.position = Vector3.Lerp(attackPos, originalPos, t);
+            yield return null;
+        }
+
+        // 5. Evaluar si alguien murió o pasar el turno
+        if (defender.currentHP <= 0)
+        {
+            if (defender == enemyUnit)
+            {
+                state = BattleState.Won;
+                Debug.Log("<color=green>¡Enemigo Derrotado! Abriendo Cosecha...</color>");
+                EndCombatWithHarvest(); 
+            }
+            else
+            {
+                // --- NUEVA LÓGICA DE DERROTA ---
+                state = BattleState.Lost;
+                Debug.Log("<color=red>Has muerto... El bucle se reinicia.</color>");
+                StartCoroutine(GameOverRoutine()); // Llamamos al fundido y reinicio
+            }
+        }
+        else
+        {
+            DetermineNextTurn(); 
+        }
+    }
+    // --- RUTINA DE GAME OVER (ROGUELIKE) ---
+    private IEnumerator GameOverRoutine()
+    {
+        Debug.Log("<color=red>Iniciando secuencia de reinicio Roguelike...</color>");
+
+        // 1. Apagamos la UI de combate para que desaparezcan los botones
+        if (combatUI != null) combatUI.SetActive(false);
+
+        // 2. Fundido a negro usando tu Flash Screen
+        if (flashScreen != null)
+        {
+            flashScreen.gameObject.SetActive(true);
+            Color fadeColor = Color.black;
+            fadeColor.a = 0f;
+            flashScreen.color = fadeColor;
+
+            float fadeDuration = 2.0f; // Tarda 2 segundos en oscurecerse
+            float t = 0f;
+
+            while (t < fadeDuration)
+            {
+                t += Time.deltaTime;
+                fadeColor.a = Mathf.Lerp(0f, 1f, t / fadeDuration);
+                flashScreen.color = fadeColor;
+                yield return null;
+            }
+        }
+        else
+        {
+            // Si no tienes el flashScreen asignado, simplemente esperamos 2 segundos
+            yield return new WaitForSeconds(2.0f);
+        }
+
+        // 3. Nos aseguramos de que el tiempo corra normal (por si acaso)
+        Time.timeScale = 1f;
+
+        // 4. ¡RECARGAMOS LA ESCENA ACTUAL!
+        // Esto destruye todo y vuelve a cargar la sala inicial desde cero.
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 }
