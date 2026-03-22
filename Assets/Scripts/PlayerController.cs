@@ -25,6 +25,7 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        if (!agent.isActiveAndEnabled || !agent.isOnNavMesh) return;
         // Usamos GetMouseButton para el movimiento continuo
         if (Input.GetMouseButton(0))
         {

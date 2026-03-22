@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class OrbitalCamera : MonoBehaviour
+public class CameraController : MonoBehaviour
 {
     [Header("Objetivo")]
     public Transform target; 

@@ -26,6 +26,8 @@ public class EnemyOverworldAI : MonoBehaviour
     private Transform player;
     private bool isChasing = false;
     private EnemyAura aura;
+    
+    private bool combatStarted = false; 
 
     void Start()
     {
@@ -41,6 +43,8 @@ public class EnemyOverworldAI : MonoBehaviour
 
     void Update()
     {
+        if (!agent.isActiveAndEnabled || !agent.isOnNavMesh) return;
+
         if (player == null) return;
 
         if (isChasing)
@@ -111,9 +115,28 @@ public class EnemyOverworldAI : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
+        // Si ya empezó el combate este frame, ignoramos esto
+        if (combatStarted) return;
+
         if (collision.gameObject.CompareTag("Player"))
         {
-            Debug.Log("¡Combate iniciado contra: " + enemyData.enemyName + "!");
+            combatStarted = true;
+            Debug.Log("¡Combate Frontal Normal!");
+            BattleManager.Instance.StartCombat(collision.gameObject, this.gameObject, enemyData, false);
+        }
+    }
+
+    // --- COLISIÓN POR LA ESPALDA (El Trigger invisible que creaste) ---
+    private void OnTriggerEnter(Collider other)
+    {
+        // Si ya empezó el combate, lo ignoramos
+        if (combatStarted) return;
+
+        if (other.CompareTag("Player"))
+        {
+            combatStarted = true;
+            Debug.Log("<color=green>¡Ataque por la espalda! (Trigger tocado)</color>");
+            BattleManager.Instance.StartCombat(other.gameObject, this.gameObject, enemyData, true);
         }
     }
 
