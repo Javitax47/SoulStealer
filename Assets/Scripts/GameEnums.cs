@@ -1,16 +1,15 @@
-// No necesitamos heredar de MonoBehaviour ni nada, solo declarar los Enums globales
 
 public enum ElementType 
 { 
-    Fantasmal, 
-    Fisico, 
-    Magico 
+    Phantom, 
+    Physical, 
+    Magic 
 }
 
 public enum SkillType 
 { 
-    Fisico, 
-    Magico 
+    Physical, 
+    Magic 
 }
 
 public enum BattleState 

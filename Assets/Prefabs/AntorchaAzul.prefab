@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 4962947644468191865}
   - component: {fileID: 8669425896039173608}
   m_Layer: 0
-  m_Name: Antorcha
+  m_Name: AntorchaAzul
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -27,9 +27,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 893892999568147523}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.2588186, y: -0, z: -0, w: 0.965926}
+  m_LocalRotation: {x: 0.2588191, y: 0, z: 0, w: 0.9659258}
   m_LocalPosition: {x: 17, y: 6.5, z: -18}
-  m_LocalScale: {x: 0.7, y: 1, z: 0.7}
+  m_LocalScale: {x: 0.7, y: 1, z: 0.70000005}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 2869898803884717918}
@@ -339,7 +339,7 @@ ParticleSystem:
       serializedVersion: 2
       minMaxState: 0
       minColor: {r: 1, g: 1, b: 1, a: 1}
-      maxColor: {r: 1, g: 0.5082226, b: 0, a: 1}
+      maxColor: {r: 0, g: 0.74007845, b: 1, a: 1}
       maxGradient:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 1}
@@ -986,7 +986,7 @@ ParticleSystem:
     rateOverTime:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 15
+      scalar: 20
       minScalar: 10
       maxCurve:
         serializedVersion: 2
@@ -4980,7 +4980,7 @@ Transform:
   m_GameObject: {fileID: 6508760737142722422}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 5, y: 5, z: 5}
+  m_LocalPosition: {x: 0.000000076634535, y: 3.8594549, z: 2.177884}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4996,8 +4996,8 @@ Light:
   m_Enabled: 1
   serializedVersion: 12
   m_Type: 2
-  m_Color: {r: 1, g: 0.6903105, b: 0.27735847, a: 1}
-  m_Intensity: 1000
+  m_Color: {r: 0.27843142, g: 0.87388057, b: 1, a: 1}
+  m_Intensity: 350
   m_Range: 100
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -5092,6 +5092,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e6299c64bc5b81448859df95a447bfd1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TorchFlicker
-  _minIntensity: 850
-  _maxIntensity: 1100
+  _minIntensity: 300
+  _maxIntensity: 400
   _flickerSpeed: 7

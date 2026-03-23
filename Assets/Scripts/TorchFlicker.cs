@@ -3,23 +3,23 @@ using UnityEngine;
 [RequireComponent(typeof(Light))]
 public class TorchFlicker : MonoBehaviour
 {
-    [Header("Ajustes de Intensidad")]
-    public float minIntensity = 1.5f;
-    public float maxIntensity = 3.0f;
-    public float flickerSpeed = 2.5f;
+    [Header("Intensity Settings")]
+    [SerializeField] private float _minIntensity = 1.5f;
+    [SerializeField] private float _maxIntensity = 3.0f;
+    [SerializeField] private float _flickerSpeed = 2.5f;
 
-    private Light torchLight;
-    private float randomOffset;
+    private Light _torchLight;
+    private float _randomOffset;
 
     void Start()
     {
-        torchLight = GetComponent<Light>();
-        randomOffset = Random.Range(800f, 1100f);
+        _torchLight = GetComponent<Light>();
+        _randomOffset = Random.Range(800f, 1100f);
     }
 
     void Update()
     {
-        float mathNoise = Mathf.PerlinNoise(Time.time * flickerSpeed, randomOffset);
-        torchLight.intensity = Mathf.Lerp(minIntensity, maxIntensity, mathNoise);
+        float mathNoise = Mathf.PerlinNoise(Time.time * _flickerSpeed, _randomOffset);
+        _torchLight.intensity = Mathf.Lerp(_minIntensity, _maxIntensity, mathNoise);
     }
 }

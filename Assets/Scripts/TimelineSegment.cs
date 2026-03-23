@@ -3,47 +3,43 @@ using UnityEngine.UI;
 
 public class TimelineSegment : MonoBehaviour
 {
-    [Header("Referencias UI")]
-    public Image lineBackground; 
-    public Image circleBackground; // El fondo del círculo blanco
-    public Image iconImage;        // <-- NUEVO: La imagen del monstruo
-    public Image arrowHead; 
+    [Header("UI References")]
+    [SerializeField] private Image _lineBackground; 
+    [SerializeField] private Image _circleBackground; 
+    [SerializeField] private Image _iconImage;        
+    [SerializeField] private Image _arrowHead; 
 
-    [Header("Colores")]
-    public Color playerColor = new Color(0.2f, 0.5f, 1f); 
-    public Color enemyColor = new Color(1f, 0.3f, 0.3f);  
+    [Header("Colors")]
+    [SerializeField] private Color _playerColor = new Color(0.2f, 0.5f, 1f); 
+    [SerializeField] private Color _enemyColor = new Color(1f, 0.3f, 0.3f);  
 
     public void Setup(bool isPlayer, Sprite iconSprite, bool isLastSegment)
     {
-        // Decidir el color según el bando
-        Color factionColor = isPlayer ? playerColor : enemyColor;
+        Color factionColor = isPlayer ? _playerColor : _enemyColor;
 
-        // 1. Pintar el cuerpo de la línea (La raya recta)
-        if (lineBackground != null) 
+        if (_lineBackground != null) 
         {
-            lineBackground.color = factionColor;
+            _lineBackground.color = factionColor;
         }
 
-        // 2. Asignar el retrato del monstruo
-        if (iconImage != null)
+        if (_iconImage != null)
         {
             if (iconSprite != null) 
             { 
-                iconImage.sprite = iconSprite; 
-                iconImage.color = Color.white; 
+                _iconImage.sprite = iconSprite; 
+                _iconImage.color = Color.white; 
             }
             else 
             { 
-                iconImage.color = Color.clear; 
+                _iconImage.color = Color.clear; 
             }
         }
 
-        // 3. Activar y pintar la punta de la flecha para TODOS los turnos
-        if (arrowHead != null)
+        if (_arrowHead != null)
         {
-            arrowHead.gameObject.SetActive(true);
+            _arrowHead.gameObject.SetActive(true);
             
-            if (arrowHead.TryGetComponent<Image>(out Image arrowImg))
+            if (_arrowHead.TryGetComponent<Image>(out Image arrowImg))
             {
                 arrowImg.color = factionColor;
             }

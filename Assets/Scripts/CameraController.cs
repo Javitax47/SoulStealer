@@ -1,43 +1,63 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class CameraController : MonoBehaviour
 {
-    [Header("Objetivo")]
-    public Transform target; 
+    [Header("Target")]
+    [SerializeField] private Transform _target; 
+ 
+    [Header("Orbit Configuration")]
+    [SerializeField] private float _distance = 50f; 
+    [SerializeField] private float _sensitivityX = 4f; 
+    [SerializeField] private float _fixedAngleY = 35f; 
 
-    [Header("Configuración de Órbita")]
-    public float distance = 50f; 
-    public float sensitivityX = 4f; 
-    public float fixedAngleY = 35f; // Ángulo vertical fijo (cámara desde arriba en diagonal)
+    [Header("Input System")]
+    [SerializeField] private InputActionReference _orbitToggleAction;
+    [SerializeField] private InputActionReference _lookAction;
 
-    private float currentX = -75f;
+    private float _currentX = -75f;
 
     void LateUpdate()
     {
-        if (target == null) return;
+        if (_target == null) return;
 
-        // Si mantenemos pulsado el CLIC DERECHO
-        if (Input.GetMouseButton(1))
+        bool isOrbiting = false;
+        if (_orbitToggleAction != null && _orbitToggleAction.action.IsPressed())
         {
-            // Giramos solo horizontalmente
-            currentX += Input.GetAxis("Mouse X") * sensitivityX;
+            isOrbiting = true;
+        }
+        else if (_orbitToggleAction == null && Input.GetMouseButton(1))
+        {
+            isOrbiting = true;
+        }
 
-            // Ocultamos y bloqueamos el ratón
+        if (isOrbiting)
+        {
+            float lookDelta = 0f;
+            if (_lookAction != null)
+            {
+                lookDelta = _lookAction.action.ReadValue<Vector2>().x;
+            }
+            else
+            {
+                lookDelta = Input.GetAxis("Mouse X");
+            }
+
+            _currentX += lookDelta * _sensitivityX;
+
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
         }
         else
         {
-            // Al soltar el clic derecho, el ratón vuelve a aparecer para que puedas hacer clic en el suelo
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
         }
 
-        // Calculamos la rotación usando el ángulo vertical fijo y el giro horizontal
-        Vector3 direction = new Vector3(0, 0, -distance);
-        Quaternion rotation = Quaternion.Euler(fixedAngleY, currentX, 0);
+        Vector3 direction = new Vector3(0, 0, -_distance);
+        Quaternion rotation = Quaternion.Euler(_fixedAngleY, _currentX, 0);
         
-        transform.position = target.position + rotation * direction;
-        transform.LookAt(target.position);
+        transform.position = _target.position + rotation * direction;
+        transform.LookAt(_target.position);
     }
 }

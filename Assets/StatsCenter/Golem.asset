@@ -12,14 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7dd4c9b834817e4429cf16d9f97dbfaf, type: 3}
   m_Name: Golem
   m_EditorClassIdentifier: Assembly-CSharp::SoulData
-  icon: {fileID: 21300000, guid: 8485fab321d80a74eac77f70e754681f, type: 3}
-  soulName: Golem
-  element: 1
-  maxHP: 40
-  attack: 10
-  defense: 8
-  magicAttack: 10
-  magicDefense: 8
-  speed: 6
-  skills:
+  _icon: {fileID: 21300000, guid: 8485fab321d80a74eac77f70e754681f, type: 3}
+  _soulName: Golem
+  _element: 1
+  _maxHP: 40
+  _attack: 10
+  _defense: 8
+  _magicAttack: 10
+  _magicDefense: 8
+  _speed: 6
+  _skills:
   - {fileID: 11400000, guid: 0a854f345ec6a9b4bb5b96728cc18c12, type: 2}

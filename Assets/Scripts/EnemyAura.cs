@@ -3,25 +3,25 @@ using System.Collections;
 
 public class EnemyAura : MonoBehaviour
 {
-    public Light auraLight;
-    public float pulseSpeed = 2f;
+    [SerializeField] private Light _auraLight;
+    [SerializeField] private float _pulseSpeed = 2f;
 
-    [Header("Modo Patrulla")]
-    public Color patrolColor = Color.red;
-    public float patrolMinIntensity = 1f;
-    public float patrolMaxIntensity = 3f;
+    [Header("Patrol Mode")]
+    [SerializeField] private Color _patrolColor = Color.red;
+    [SerializeField] private float _patrolMinIntensity = 1f;
+    [SerializeField] private float _patrolMaxIntensity = 3f;
 
-    [Header("Modo Persecución (Alerta)")]
-    public Color chaseColor = new Color(1f, 0.5f, 0f); // Naranja/Amarillo por defecto
-    public float chaseMinIntensity = 3f;
-    public float chaseMaxIntensity = 6f;
+    [Header("Chase Mode (Alert)")]
+    [SerializeField] private Color _chaseColor = new Color(1f, 0.5f, 0f); 
+    [SerializeField] private float _chaseMinIntensity = 3f;
+    [SerializeField] private float _chaseMaxIntensity = 6f;
     
-    [Header("Efecto Destello")]
-    public float flashIntensity = 12f; // El pico máximo de luz al detectarte
-    public float flashDuration = 0.2f; // Cuánto tarda en apagarse el destello
+    [Header("Flash Effect")]
+    [SerializeField] private float _flashIntensity = 12f; 
+    [SerializeField] private float _flashDuration = 0.2f; 
 
-    private bool isChasing = false;
-    private bool isFlashing = false;
+    private bool _isChasing = false;
+    private bool _isFlashing = false;
 
     void Start()
     {
@@ -30,55 +30,54 @@ public class EnemyAura : MonoBehaviour
 
     void Update()
     {
-        // Si no hay luz o está en medio del destello, no hacemos el pulso normal
-        if (auraLight == null || isFlashing) return;
+        if (_auraLight == null || _isFlashing) return;
 
-        // Pulso suave continuo
-        float pulse = Mathf.Sin(Time.time * pulseSpeed) * 0.5f + 0.5f; 
+        float pulse = Mathf.Sin(Time.time * _pulseSpeed) * 0.5f + 0.5f; 
         
-        // Elegimos los límites dependiendo de si está persiguiendo o no
-        float currentMin = isChasing ? chaseMinIntensity : patrolMinIntensity;
-        float currentMax = isChasing ? chaseMaxIntensity : patrolMaxIntensity;
+        float currentMin = _isChasing ? _chaseMinIntensity : _patrolMinIntensity;
+        float currentMax = _isChasing ? _chaseMaxIntensity : _patrolMaxIntensity;
 
-        auraLight.intensity = Mathf.Lerp(currentMin, currentMax, pulse);
+        _auraLight.intensity = Mathf.Lerp(currentMin, currentMax, pulse);
     }
 
-    // Llama a esto el script de IA cuando ve al jugador
     public void TriggerChaseMode()
     {
-        if (!isChasing)
+        if (!_isChasing)
         {
-            isChasing = true;
-            auraLight.color = chaseColor;
-            StartCoroutine(FlashEffect());
+            _isChasing = true;
+            if (_auraLight != null)
+            {
+                _auraLight.color = _chaseColor;
+                StartCoroutine(FlashEffect());
+            }
         }
     }
 
-    // Llama a esto el script de IA cuando el jugador escapa
     public void TriggerPatrolMode()
     {
-        if (isChasing || auraLight.color != patrolColor)
+        if (_isChasing || (_auraLight != null && _auraLight.color != _patrolColor))
         {
-            isChasing = false;
-            auraLight.color = patrolColor;
+            _isChasing = false;
+            if (_auraLight != null)
+            {
+                _auraLight.color = _patrolColor;
+            }
         }
     }
 
-    // Corrutina que crea el "Chispazo" de luz
     private IEnumerator FlashEffect()
     {
-        isFlashing = true;
-        auraLight.intensity = flashIntensity;
+        _isFlashing = true;
+        _auraLight.intensity = _flashIntensity;
 
         float timer = 0f;
-        while (timer < flashDuration)
+        while (timer < _flashDuration)
         {
             timer += Time.deltaTime;
-            // Interpola desde el flash máximo hasta la intensidad máxima de persecución
-            auraLight.intensity = Mathf.Lerp(flashIntensity, chaseMaxIntensity, timer / flashDuration);
+            _auraLight.intensity = Mathf.Lerp(_flashIntensity, _chaseMaxIntensity, timer / _flashDuration);
             yield return null;
         }
 
-        isFlashing = false;
+        _isFlashing = false;
     }
 }

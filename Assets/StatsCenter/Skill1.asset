@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7937917f021cfe34aa55b3887c1deb3a, type: 3}
   m_Name: Skill1
   m_EditorClassIdentifier: Assembly-CSharp::SkillData
-  skillName: Habilidad 1
-  element: 1
-  type: 0
-  power: 15
+  _skillName: Placaje
+  _element: 1
+  _type: 0
+  _power: 15

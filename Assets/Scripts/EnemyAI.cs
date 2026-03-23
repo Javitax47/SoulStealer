@@ -4,70 +4,68 @@ using UnityEngine.AI;
 [RequireComponent(typeof(NavMeshAgent))]
 public class EnemyOverworldAI : MonoBehaviour
 {
-    public SoulData enemyData; 
+    [SerializeField] private SoulData _enemyData; 
+    public SoulData EnemyData => _enemyData;
 
     [Header("Vision Settings")]
-    public float viewRadius = 5f;
-    [Range(0, 360)] public float viewAngle = 90f;
-    public float escapeRadius = 8f;
-    public float eyeHeight = 1f;
-    public LayerMask targetMask; 
-    public LayerMask obstacleMask; 
+    [SerializeField] private float _viewRadius = 5f;
+    [SerializeField] [Range(0, 360)] private float _viewAngle = 90f;
+    [SerializeField] private float _escapeRadius = 8f;
+    [SerializeField] private float _eyeHeight = 1f;
+    [SerializeField] private LayerMask _targetMask; 
+    [SerializeField] private LayerMask _obstacleMask; 
 
     [Header("Movement Settings")]
-    public float patrolSpeed = 2.5f;
-    public float chaseSpeed = 5.5f;
+    [SerializeField] private float _patrolSpeed = 2.5f;
+    [SerializeField] private float _chaseSpeed = 5.5f;
 
     [Header("Patrol Settings")]
-    public Transform[] patrolPoints;
-    private int currentPatrolIndex;
+    [SerializeField] private Transform[] _patrolPoints;
+    private int _currentPatrolIndex;
 
-    private NavMeshAgent agent;
-    private Transform player;
-    private bool isChasing = false;
-    private EnemyAura aura;
-    
-    private bool combatStarted = false; 
+    private NavMeshAgent _agent;
+    private Transform _player;
+    private bool _isChasing = false;
+    private EnemyAura _aura;
+    private bool _combatStarted = false; 
 
     void Start()
     {
-        agent = GetComponent<NavMeshAgent>();
-        aura = GetComponentInChildren<EnemyAura>(); 
+        _agent = GetComponent<NavMeshAgent>();
+        _aura = GetComponentInChildren<EnemyAura>(); 
         
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-        if(playerObj != null) player = playerObj.transform;
+        if (playerObj != null) _player = playerObj.transform;
 
-        agent.speed = patrolSpeed;
+        _agent.speed = _patrolSpeed;
         GoToNextPatrolPoint();
     }
 
     void Update()
     {
-        if (!agent.isActiveAndEnabled || !agent.isOnNavMesh) return;
+        if (!_agent.isActiveAndEnabled || !_agent.isOnNavMesh) return;
+        if (_player == null) return;
 
-        if (player == null) return;
-
-        if (isChasing)
+        if (_isChasing)
         {
-            float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+            float distanceToPlayer = Vector3.Distance(transform.position, _player.position);
             
-            // Si el jugador logra salir del radio de escape, el enemigo se rinde
-            if (distanceToPlayer > escapeRadius)
+            if (distanceToPlayer > _escapeRadius)
             {
                 LosePlayer();
             }
             else
             {
-                agent.speed = chaseSpeed;
-                agent.SetDestination(player.position);
+                _agent.speed = _chaseSpeed;
+                _agent.SetDestination(_player.position);
             }
         }
         else
         {
             FindPlayerWithVisionCone();
 
-            agent.speed = patrolSpeed;
-            if (!agent.pathPending && agent.remainingDistance < 0.5f)
+            _agent.speed = _patrolSpeed;
+            if (!_agent.pathPending && _agent.remainingDistance < 0.5f)
             {
                 GoToNextPatrolPoint();
             }
@@ -76,20 +74,20 @@ public class EnemyOverworldAI : MonoBehaviour
 
     void FindPlayerWithVisionCone()
     {
-        Vector3 eyePosition = transform.position + Vector3.up * eyeHeight;
-        Collider[] targetsInViewRadius = Physics.OverlapSphere(eyePosition, viewRadius, targetMask);
+        Vector3 eyePosition = transform.position + Vector3.up * _eyeHeight;
+        Collider[] targetsInViewRadius = Physics.OverlapSphere(eyePosition, _viewRadius, _targetMask);
 
         for (int i = 0; i < targetsInViewRadius.Length; i++)
         {
             Transform target = targetsInViewRadius[i].transform;
-            Vector3 targetEyePosition = target.position + Vector3.up * eyeHeight; 
+            Vector3 targetEyePosition = target.position + Vector3.up * _eyeHeight; 
             Vector3 dirToTarget = (targetEyePosition - eyePosition).normalized;
 
-            if (Vector3.Angle(transform.forward, dirToTarget) < viewAngle / 2)
+            if (Vector3.Angle(transform.forward, dirToTarget) < _viewAngle / 2)
             {
                 float dstToTarget = Vector3.Distance(eyePosition, targetEyePosition);
 
-                if (!Physics.Raycast(eyePosition, dirToTarget, dstToTarget, obstacleMask))
+                if (!Physics.Raycast(eyePosition, dirToTarget, dstToTarget, _obstacleMask))
                 {
                     StartChasing();
                     return; 
@@ -100,77 +98,68 @@ public class EnemyOverworldAI : MonoBehaviour
 
     void StartChasing()
     {
-        isChasing = true;
-        if (aura != null) aura.TriggerChaseMode(); 
+        _isChasing = true;
+        if (_aura != null) _aura.TriggerChaseMode(); 
     }
 
     void LosePlayer()
     {
-        isChasing = false;
-        if (aura != null) aura.TriggerPatrolMode(); 
+        _isChasing = false;
+        if (_aura != null) _aura.TriggerPatrolMode(); 
         
-        agent.ResetPath(); 
+        _agent.ResetPath(); 
         GoToNextPatrolPoint();
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        // Si ya empezó el combate este frame, ignoramos esto
-        if (combatStarted) return;
+        if (_combatStarted) return;
 
         if (collision.gameObject.CompareTag("Player"))
         {
-            combatStarted = true;
-            Debug.Log("¡Combate Frontal Normal!");
-            BattleManager.Instance.StartCombat(collision.gameObject, this.gameObject, enemyData, false);
+            _combatStarted = true;
+            BattleManager.Instance.StartCombat(collision.gameObject, gameObject, _enemyData, false);
         }
     }
 
-    // --- COLISIÓN POR LA ESPALDA (El Trigger invisible que creaste) ---
     private void OnTriggerEnter(Collider other)
     {
-        // Si ya empezó el combate, lo ignoramos
-        if (combatStarted) return;
+        if (_combatStarted) return;
 
         if (other.CompareTag("Player"))
         {
-            combatStarted = true;
-            Debug.Log("<color=green>¡Ataque por la espalda! (Trigger tocado)</color>");
-            BattleManager.Instance.StartCombat(other.gameObject, this.gameObject, enemyData, true);
+            _combatStarted = true;
+            BattleManager.Instance.StartCombat(other.gameObject, gameObject, _enemyData, true);
         }
     }
 
     void GoToNextPatrolPoint()
     {
-        if (patrolPoints == null || patrolPoints.Length == 0) return;
-        agent.destination = patrolPoints[currentPatrolIndex].position;
-        currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Length;
+        if (_patrolPoints == null || _patrolPoints.Length == 0) return;
+        _agent.destination = _patrolPoints[_currentPatrolIndex].position;
+        _currentPatrolIndex = (_currentPatrolIndex + 1) % _patrolPoints.Length;
     }
 
-    // --- VISUALIZACIÓN EN EL EDITOR ---
     private void OnDrawGizmosSelected()
     {
-        Vector3 eyePosition = transform.position + Vector3.up * eyeHeight;
+        Vector3 eyePosition = transform.position + Vector3.up * _eyeHeight;
 
-        // Cono de visión (Detección) - Blanco
         Gizmos.color = Color.white;
-        Gizmos.DrawWireSphere(eyePosition, viewRadius);
+        Gizmos.DrawWireSphere(eyePosition, _viewRadius);
 
-        Vector3 viewAngleA = DirFromAngle(-viewAngle / 2, false);
-        Vector3 viewAngleB = DirFromAngle(viewAngle / 2, false);
+        Vector3 viewAngleA = DirFromAngle(-_viewAngle / 2, false);
+        Vector3 viewAngleB = DirFromAngle(_viewAngle / 2, false);
         Gizmos.color = Color.yellow;
-        Gizmos.DrawLine(eyePosition, eyePosition + viewAngleA * viewRadius);
-        Gizmos.DrawLine(eyePosition, eyePosition + viewAngleB * viewRadius);
+        Gizmos.DrawLine(eyePosition, eyePosition + viewAngleA * _viewRadius);
+        Gizmos.DrawLine(eyePosition, eyePosition + viewAngleB * _viewRadius);
 
-        // --- NUEVO: LÍMITE DE ESCAPE - Gris (Debe verse MÁS GRANDE que el blanco) ---
         Gizmos.color = new Color(0.5f, 0.5f, 0.5f, 0.5f);
-        Gizmos.DrawWireSphere(eyePosition, escapeRadius);
+        Gizmos.DrawWireSphere(eyePosition, _escapeRadius);
 
-        // Línea roja apuntando al jugador si está persiguiendo
-        if (isChasing && player != null)
+        if (_isChasing && _player != null)
         {
             Gizmos.color = Color.red;
-            Gizmos.DrawLine(eyePosition, player.position + Vector3.up * eyeHeight);
+            Gizmos.DrawLine(eyePosition, _player.position + Vector3.up * _eyeHeight);
         }
     }
 

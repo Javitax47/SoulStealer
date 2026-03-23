@@ -1,81 +1,94 @@
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(NavMeshAgent))]
 public class PlayerController : MonoBehaviour
 {
-    private NavMeshAgent agent;
-    private Camera mainCamera;
+    private NavMeshAgent _agent;
+    private Camera _mainCamera;
 
-    [Header("Efectos Visuales")]
-    [Tooltip("Arrastra aquí el GameObject que servirá como indicador de clic")]
-    public GameObject clickIndicator; 
+    [Header("Visual Effects")]
+    [SerializeField] private GameObject _clickIndicator; 
+
+    [Header("Input System")]
+    [SerializeField] private InputActionReference _moveClickAction;
+    [SerializeField] private InputActionReference _pointAction;
 
     void Start()
     {
-        agent = GetComponent<NavMeshAgent>();
-        mainCamera = Camera.main;
+        _agent = GetComponent<NavMeshAgent>();
+        _mainCamera = Camera.main;
 
-        // Si hemos asignado un indicador, lo ocultamos al empezar el juego
-        if (clickIndicator != null)
+        if (_clickIndicator != null)
         {
-            clickIndicator.SetActive(false);
+            _clickIndicator.SetActive(false);
         }
     }
 
     void Update()
     {
-
         if (EventSystem.current.IsPointerOverGameObject()) return;
-
-        if (!agent.isActiveAndEnabled || !agent.isOnNavMesh) return;
+        if (!_agent.isActiveAndEnabled || !_agent.isOnNavMesh) return;
         
-        if (Input.GetMouseButton(0))
+        bool isMoving = false;
+        if (_moveClickAction != null && _moveClickAction.action.IsPressed())
+        {
+            isMoving = true;
+        }
+        else if (_moveClickAction == null && Input.GetMouseButton(0))
+        {
+            isMoving = true;
+        }
+
+        if (isMoving)
         {
             MoveToCursor();
         }
         
-        // Que el indicador desaparezca cuando el Gólem llegue a su destino
-        if (clickIndicator != null && clickIndicator.activeSelf)
+        if (_clickIndicator != null && _clickIndicator.activeSelf)
         {
-            // Si la distancia al destino es muy pequeña, ocultamos el indicador
-            if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
+            if (!_agent.pathPending && _agent.remainingDistance <= _agent.stoppingDistance)
             {
-                clickIndicator.SetActive(false);
+                _clickIndicator.SetActive(false);
             }
         }
     }
 
     private void MoveToCursor()
     {
-        if (mainCamera == null) return;
+        if (_mainCamera == null) return;
 
-        Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-        RaycastHit hit;
-
-        if (Physics.Raycast(ray, out hit))
+        Vector2 screenPos = Vector2.zero;
+        if (_pointAction != null)
         {
-            agent.SetDestination(hit.point);
+            screenPos = _pointAction.action.ReadValue<Vector2>();
+        }
+        else
+        {
+            screenPos = Input.mousePosition;
+        }
 
-            // Movemos el indicador a la posición donde chocó el rayo (el suelo)
-            if (clickIndicator != null)
+        Ray ray = _mainCamera.ScreenPointToRay(screenPos);
+        
+        if (Physics.Raycast(ray, out RaycastHit hit))
+        {
+            _agent.SetDestination(hit.point);
+
+            if (_clickIndicator != null)
             {
-                // Lo levantamos (0.1f en Y) para que no se superponga o se hunda en el suelo (Z-fighting)
-                clickIndicator.transform.position = hit.point + new Vector3(0, 0.1f, 0);
-                
-                // Lo activamos para que sea visible
-                clickIndicator.SetActive(true);
+                _clickIndicator.transform.position = hit.point + new Vector3(0, 0.1f, 0);
+                _clickIndicator.SetActive(true);
             }
         }
     }
 
     private void OnDisable()
     {
-        // Apagamos el marcador visual del suelo
-        if (clickIndicator != null)
+        if (_clickIndicator != null)
         {
-            clickIndicator.SetActive(false);
+            _clickIndicator.SetActive(false);
         }
     }
 }
