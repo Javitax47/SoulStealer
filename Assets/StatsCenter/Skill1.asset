@@ -15,4 +15,5 @@ MonoBehaviour:
   _skillName: Placaje
   _element: 1
   _type: 0
-  _power: 15
+  _power: 2
+  _efecto: {fileID: 0}
