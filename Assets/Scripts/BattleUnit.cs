@@ -22,6 +22,14 @@ public class BattleUnit : MonoBehaviour
             _hpSlider.maxValue = _baseData.maxHP;
             _hpSlider.value = _currentHP;
         }
+
+        //Asignar valores finales
+        baseData.finalAttack = baseData.attack;
+        baseData.finalMAttack = baseData.magicAttack;
+        baseData.finalDefense = baseData.defense;
+        baseData.finalMDefense = baseData.magicDefense;
+        baseData.finalSpeed = baseData.speed;
+
         if (_localCombatUI != null) _localCombatUI.SetActive(false);
     }
 

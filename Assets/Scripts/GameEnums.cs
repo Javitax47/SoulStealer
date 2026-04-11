@@ -20,3 +20,19 @@ public enum BattleState
     Won, 
     Lost 
 }
+
+public enum EffectTarget
+{
+    Self,
+    Enemy
+}
+
+public enum BattleStats
+{
+    Attack,
+    MAttack,
+    Defense,
+    MDefense,
+    Speed,
+    None
+}

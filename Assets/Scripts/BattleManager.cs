@@ -242,7 +242,7 @@ public class BattleManager : MonoBehaviour
         int damage = BattleCalculator.CalculateDamage(_playerUnit, _enemyUnit, skillUsed);
         
         if (_turnSpotlight != null) _turnSpotlight.gameObject.SetActive(false);
-        StartCoroutine(_actionHandler.PerformAttackAnim(_playerUnit, _enemyUnit, damage, () => OnActionComplete(_enemyUnit)));
+        StartCoroutine(_actionHandler.PerformAttackAnim(_playerUnit, _enemyUnit, damage, skillUsed, () => OnActionComplete(_enemyUnit)));
     }
 
     private void OnActionComplete(BattleUnit defender)
@@ -301,7 +301,7 @@ public class BattleManager : MonoBehaviour
         }
         
         if (_turnSpotlight != null) _turnSpotlight.gameObject.SetActive(false);
-        StartCoroutine(_actionHandler.PerformAttackAnim(_enemyUnit, _playerUnit, maxExpectedDamage, () => OnActionComplete(_playerUnit)));
+        StartCoroutine(_actionHandler.PerformAttackAnim(_enemyUnit, _playerUnit, maxExpectedDamage, bestSkill, () => OnActionComplete(_playerUnit)));
     }
 
     private IEnumerator GameOverRoutine()

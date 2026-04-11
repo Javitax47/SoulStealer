@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7dd4c9b834817e4429cf16d9f97dbfaf, type: 3}
+  m_Name: StatsEspirituSombrio
+  m_EditorClassIdentifier: 
+  _icon: {fileID: 0}
+  _soulName: "Esp\xEDritu Sombr\xEDo"
+  _element: 0
+  _maxHP: 75
+  _attack: 9
+  _defense: 5
+  _magicAttack: 12
+  _magicDefense: 8
+  _speed: 14
+  _skills:
+  - {fileID: 11400000, guid: 2cffb446bf7234347bc821e5a8eb65c6, type: 2}
+  - {fileID: 11400000, guid: 8056c7475f1b39d4ba70646d8e07fa80, type: 2}
+  - {fileID: 11400000, guid: 4366d02635d309b49844ec59308dbabc, type: 2}
+  - {fileID: 11400000, guid: 581a79098233bab47a2d46ab5d9bcc71, type: 2}

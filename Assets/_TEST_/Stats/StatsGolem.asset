@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7dd4c9b834817e4429cf16d9f97dbfaf, type: 3}
+  m_Name: StatsGolem
+  m_EditorClassIdentifier: 
+  _icon: {fileID: 0}
+  _soulName: Golem
+  _element: 1
+  _maxHP: 40
+  _attack: 10
+  _defense: 8
+  _magicAttack: 10
+  _magicDefense: 8
+  _speed: 4
+  _skills:
+  - {fileID: 11400000, guid: 2cffb446bf7234347bc821e5a8eb65c6, type: 2}
+  - {fileID: 11400000, guid: ce017ca79f7d6ab43b96de3cd957879b, type: 2}
+  - {fileID: 11400000, guid: 494d02b33a139d84fa0d1c11e79532c2, type: 2}
+  - {fileID: 11400000, guid: fbf6f4e61dfc16441b3b4b689f410180, type: 2}

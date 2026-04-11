@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7dd4c9b834817e4429cf16d9f97dbfaf, type: 3}
+  m_Name: StatsHechicero
+  m_EditorClassIdentifier: 
+  _icon: {fileID: 0}
+  _soulName: "Hechicero Del Vac\xEDo"
+  _element: 2
+  _maxHP: 70
+  _attack: 6
+  _defense: 5
+  _magicAttack: 16
+  _magicDefense: 10
+  _speed: 12
+  _skills:
+  - {fileID: 11400000, guid: 494d02b33a139d84fa0d1c11e79532c2, type: 2}
+  - {fileID: 11400000, guid: 2bddffb60eaa3f14e8300d6760ad3ccb, type: 2}
+  - {fileID: 11400000, guid: 3d71ee92c84f0f24785e1a31904a5295, type: 2}
+  - {fileID: 11400000, guid: ccc3e26765adb114188b34b512eaaf19, type: 2}
