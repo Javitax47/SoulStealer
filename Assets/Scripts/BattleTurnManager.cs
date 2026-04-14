@@ -22,8 +22,8 @@ public class BattleTurnManager : MonoBehaviour
     {
         while (_playerGauge < TURN_THRESHOLD && _enemyGauge < TURN_THRESHOLD)
         {
-            _playerGauge += Mathf.Max(1, player.baseData.speed);
-            _enemyGauge += Mathf.Max(1, enemy.baseData.speed);
+            _playerGauge += Mathf.Max(1, player.baseData.finalSpeed);
+            _enemyGauge += Mathf.Max(1, enemy.baseData.finalSpeed);
         }
 
         if (_playerGauge >= TURN_THRESHOLD && _enemyGauge >= TURN_THRESHOLD)
