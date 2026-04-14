@@ -81,23 +81,32 @@ public class BattleManager : MonoBehaviour
 
     private void SetOverworldComponentsEnabled(bool enabled)
     {
-        if (_currentPlayer.TryGetComponent(out NavMeshAgent pAgent)) pAgent.enabled = enabled;
-        if (_currentEnemy.TryGetComponent(out NavMeshAgent eAgent)) eAgent.enabled = enabled;
-        if (_currentPlayer.TryGetComponent(out MonoBehaviour pCtrl)) pCtrl.enabled = enabled;
-        if (_currentEnemy.TryGetComponent(out MonoBehaviour eAI)) eAI.enabled = enabled;
+        // SEGURIDAD PARA EL JUGADOR
+        if (_currentPlayer != null)
+        {
+            if (_currentPlayer.TryGetComponent(out NavMeshAgent pAgent)) pAgent.enabled = enabled;
+            if (_currentPlayer.TryGetComponent(out MonoBehaviour pCtrl)) pCtrl.enabled = enabled;
+            if (_currentPlayer.TryGetComponent(out Rigidbody pRb)) 
+            {
+                pRb.isKinematic = !enabled;
+                if (!enabled) pRb.linearVelocity = Vector3.zero;
+            }
+        }
+
+        // SEGURIDAD PARA EL ENEMIGO (Aquí es donde fallaba)
+        if (_currentEnemy != null)
+        {
+            if (_currentEnemy.TryGetComponent(out NavMeshAgent eAgent)) eAgent.enabled = enabled;
+            if (_currentEnemy.TryGetComponent(out MonoBehaviour eAI)) eAI.enabled = enabled;
+            if (_currentEnemy.TryGetComponent(out Rigidbody eRb)) 
+            {
+                eRb.isKinematic = !enabled;
+                if (!enabled) eRb.linearVelocity = Vector3.zero; 
+            }
+        }
+
+        // Cámara
         if (_cameraScript != null) _cameraScript.enabled = enabled;
-
-        if (_currentEnemy.TryGetComponent(out Rigidbody eRb)) 
-        {
-            eRb.isKinematic = !enabled;
-            if (!enabled) eRb.linearVelocity = Vector3.zero; 
-        }
-
-        if (_currentPlayer.TryGetComponent(out Rigidbody pRb)) 
-        {
-            pRb.isKinematic = !enabled;
-            if (!enabled) pRb.linearVelocity = Vector3.zero;
-        }
     }
 
     private IEnumerator TransitionToCombatRoutine(bool playerAdvantage)
@@ -181,6 +190,11 @@ public class BattleManager : MonoBehaviour
         _playerUnit = _currentPlayer.GetComponent<BattleUnit>();
         _enemyUnit = _currentEnemy.GetComponent<BattleUnit>();
 
+        if (PlayerTeam.Instance.souls.Count > 0)
+        {
+            _playerUnit.LoadSoulFromInstance(PlayerTeam.Instance.souls[0]); 
+        }
+
         if (_playerUnit != null) _playerUnit.SetCombatMode(true);
         if (_enemyUnit != null) _enemyUnit.SetCombatMode(true);
 
@@ -204,12 +218,24 @@ public class BattleManager : MonoBehaviour
     {
         _state = BattleState.Won;
         _uiManager.ShowCombatUI(false);
+
+        if (_enemyUnit != null && HarvestManager.Instance != null)
+        {
+            HarvestManager.Instance.OpenHarvestScreen(_enemyUnit.baseData);
+        }
+
+        if (_currentEnemy != null) 
+        {
+            Destroy(_currentEnemy);
+            _currentEnemy = null; // IMPORTANTE: Setea a null después de destruir
+        }
+
         if (_turnSpotlight != null) _turnSpotlight.gameObject.SetActive(false);
+    }
 
-        _uiManager.SetupHarvestScreen(_enemyUnit);
-        
-        if (_currentEnemy != null) Destroy(_currentEnemy);
-
+    public void CloseHarvestScreen()
+    {
+        _uiManager.CloseHarvestScreen();
         RestoreOverworldState();
     }
 
@@ -222,12 +248,14 @@ public class BattleManager : MonoBehaviour
         _mainCamera.orthographicSize = _prevOrthoSize;
         _currentPlayer.transform.position = _prevPlayerPos;
 
-        SetOverworldComponentsEnabled(true);
-    }
+        if (PlayerTeam.Instance.souls.Count > 0)
+        {
+            PlayerTeam.Instance.souls[0].currentHP = _playerUnit.currentHP;
+        }
 
-    public void CloseHarvestScreen()
-    {
-        _uiManager.CloseHarvestScreen();
+        ExplorationUIManager.Instance.UpdateTeamUI();
+
+        SetOverworldComponentsEnabled(true);
     }
 
     public void OnPlayerUseSkill(int skillIndex)
@@ -313,5 +341,38 @@ public class BattleManager : MonoBehaviour
 
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+    public void OnClickViewTeam()
+    {
+        if (_state != BattleState.PlayerTurn) return;
+        
+        _uiManager.ShowTeamSelection(true, PlayerTeam.Instance.souls);
+    }
+
+    public void OnSelectSoulToSwap(int index)
+    {
+        if (index >= PlayerTeam.Instance.souls.Count) return;
+
+        SoulInstance selectedInstance = PlayerTeam.Instance.souls[index];
+
+        if (_playerUnit.baseData == selectedInstance.data)
+        {
+            _uiManager.ShowTeamSelection(false);
+            return;
+        }
+
+        _playerUnit.LoadSoulFromInstance(selectedInstance);
+        
+        _uiManager.ShowTeamSelection(false);
+        _uiManager.UpdateSkillButtons(_playerUnit, false);
+        _uiManager.ShowFlash(Color.cyan, 0.3f);
+
+        DetermineNextTurn(); 
+    }
+
+    public void OnCancelSwap()
+    {
+        _uiManager.ShowTeamSelection(false);
     }
 }

@@ -300,12 +300,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2d89e2f415aaca46a643b2c781f7825, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Timeline
-  lineBackground: {fileID: 477296390181390165}
-  circleBackground: {fileID: 577707955022984421}
-  iconImage: {fileID: 7822480197957139594}
-  arrowHead: {fileID: 8566671913446779458}
-  playerColor: {r: 0, g: 0.8437352, b: 1, a: 1}
-  enemyColor: {r: 1, g: 0, b: 0, a: 1}
+  _lineBackground: {fileID: 0}
+  _circleBackground: {fileID: 0}
+  _iconImage: {fileID: 0}
+  _arrowHead: {fileID: 0}
+  _playerColor: {r: 0.2, g: 0.5, b: 1, a: 1}
+  _enemyColor: {r: 1, g: 0.3, b: 0.3, a: 1}
 --- !u!1 &6676965855247269637
 GameObject:
   m_ObjectHideFlags: 0

@@ -23,6 +23,10 @@ public class BattleUIManager : MonoBehaviour
     [Header("Visual Effects")]
     [SerializeField] private Image _flashScreen;
 
+    [Header("Team Selection UI")]
+    [SerializeField] private GameObject _teamSelectionPanel;
+    [SerializeField] private Button[] _teamMemberButtons;
+
     public void ShowCombatUI(bool show) => _combatUI.SetActive(show);
 
     public void ShowFlash(Color color, float duration)
@@ -66,10 +70,11 @@ public class BattleUIManager : MonoBehaviour
 
             child.gameObject.SetActive(true);
             TimelineSegment segmentUI = child.GetComponent<TimelineSegment>();
-            bool isPlayer = (prediction[i] == playerUnit);
             bool isLast = (i == prediction.Count - 1);
-            Sprite soulIcon = prediction[i].baseData.icon;
-            segmentUI.Setup(isPlayer, soulIcon, isLast);
+            BattleUnit unitAtTurn = prediction[i];
+            bool isPlayer = (unitAtTurn == playerUnit);
+            Sprite unitIcon = unitAtTurn.baseData.icon;
+            segmentUI.Setup(isPlayer, unitIcon, isLast);
         }
     }
 
@@ -133,6 +138,25 @@ public class BattleUIManager : MonoBehaviour
         else
         {
             yield return new WaitForSeconds(duration);
+        }
+    }
+
+    public void ShowTeamSelection(bool show, List<SoulInstance> currentTeam = null)
+    {
+        _teamSelectionPanel.SetActive(show);
+        if (!show || currentTeam == null) return;
+
+        for (int i = 0; i < _teamMemberButtons.Length; i++)
+        {
+            if (i < currentTeam.Count)
+            {
+                _teamMemberButtons[i].gameObject.SetActive(true);
+                _teamMemberButtons[i].GetComponentInChildren<TextMeshProUGUI>().text = currentTeam[i].data.soulName; 
+            }
+            else
+            {
+                _teamMemberButtons[i].gameObject.SetActive(false);
+            }
         }
     }
 }

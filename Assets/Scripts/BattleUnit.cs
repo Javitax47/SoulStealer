@@ -9,6 +9,7 @@ public class BattleUnit : MonoBehaviour
     
     public SoulData baseData => _baseData;
     public int currentHP => _currentHP;
+    
  
     [Header("Local UI")]
     [SerializeField] private GameObject _localCombatUI; 
@@ -16,20 +17,6 @@ public class BattleUnit : MonoBehaviour
 
     void Start()
     {
-        _currentHP = _baseData.maxHP;
-        if (_hpSlider != null)
-        {
-            _hpSlider.maxValue = _baseData.maxHP;
-            _hpSlider.value = _currentHP;
-        }
-
-        //Asignar valores finales
-        baseData.finalAttack = baseData.attack;
-        baseData.finalMAttack = baseData.magicAttack;
-        baseData.finalDefense = baseData.defense;
-        baseData.finalMDefense = baseData.magicDefense;
-        baseData.finalSpeed = baseData.speed;
-
         if (_localCombatUI != null) _localCombatUI.SetActive(false);
     }
 
@@ -63,5 +50,26 @@ public class BattleUnit : MonoBehaviour
     public void SetCombatMode(bool inCombat)
     {
         if (_localCombatUI != null) _localCombatUI.SetActive(inCombat);
+    }
+
+    public void LoadSoulFromInstance(SoulInstance instance)
+    {
+        if (instance == null || instance.data == null) return;
+
+        _baseData = instance.data;
+        _currentHP = instance.currentHP;
+
+        if (_hpSlider != null)
+        {
+            _hpSlider.maxValue = _baseData.maxHP;
+            _hpSlider.value = _currentHP;
+        }
+
+        // Actualizar stats finales para cálculos
+        baseData.finalAttack = _baseData.attack;
+        baseData.finalMAttack = _baseData.magicAttack;
+        baseData.finalDefense = _baseData.defense;
+        baseData.finalMDefense = _baseData.magicDefense;
+        baseData.finalSpeed = _baseData.speed;
     }
 }
