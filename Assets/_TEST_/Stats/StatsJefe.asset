@@ -15,6 +15,7 @@ MonoBehaviour:
   _icon: {fileID: 0}
   _soulName: "Golem extra\xF1o"
   _element: 1
+  _enemyAiStyle: 1
   _maxHP: 80
   _attack: 15
   _defense: 10

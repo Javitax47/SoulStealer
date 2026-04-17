@@ -61,7 +61,6 @@ public class BattleManager : MonoBehaviour
             return;
         }
 
-        // Auto-discover managers on the same GameObject if not assigned
         if (_navigator == null) _navigator = GetComponent<BattleNavigator>();
         if (_turnManager == null) _turnManager = GetComponent<BattleTurnManager>();
         if (_uiManager == null) _uiManager = GetComponent<BattleUIManager>();
@@ -73,15 +72,12 @@ public class BattleManager : MonoBehaviour
         _currentPlayer = player;
         _currentEnemy = enemy;
 
-        // Disable overworld components
         SetOverworldComponentsEnabled(false);
-
         StartCoroutine(TransitionToCombatRoutine(playerAdvantage));
     }
 
     private void SetOverworldComponentsEnabled(bool enabled)
     {
-        // SEGURIDAD PARA EL JUGADOR
         if (_currentPlayer != null)
         {
             if (_currentPlayer.TryGetComponent(out NavMeshAgent pAgent)) pAgent.enabled = enabled;
@@ -93,7 +89,6 @@ public class BattleManager : MonoBehaviour
             }
         }
 
-        // SEGURIDAD PARA EL ENEMIGO (Aquí es donde fallaba)
         if (_currentEnemy != null)
         {
             if (_currentEnemy.TryGetComponent(out NavMeshAgent eAgent)) eAgent.enabled = enabled;
@@ -105,16 +100,13 @@ public class BattleManager : MonoBehaviour
             }
         }
 
-        // Cámara
         if (_cameraScript != null) _cameraScript.enabled = enabled;
     }
 
     private IEnumerator TransitionToCombatRoutine(bool playerAdvantage)
     {
-        // Visual effects (flash)
         _uiManager.ShowFlash(playerAdvantage ? Color.white : Color.red, _flashDuration);
 
-        // Save state
         _prevCameraPos = _mainCamera.transform.position;
         _prevCameraRot = _mainCamera.transform.rotation;
         _prevPlayerPos = _currentPlayer.transform.position;
@@ -227,7 +219,7 @@ public class BattleManager : MonoBehaviour
         if (_currentEnemy != null) 
         {
             Destroy(_currentEnemy);
-            _currentEnemy = null; // IMPORTANTE: Setea a null después de destruir
+            _currentEnemy = null;
         }
 
         if (_turnSpotlight != null) _turnSpotlight.gameObject.SetActive(false);
@@ -254,7 +246,6 @@ public class BattleManager : MonoBehaviour
         }
 
         ExplorationUIManager.Instance.UpdateTeamUI();
-
         SetOverworldComponentsEnabled(true);
     }
 
@@ -315,21 +306,154 @@ public class BattleManager : MonoBehaviour
     {
         yield return new WaitForSeconds(1.5f);
 
-        SkillData bestSkill = _enemyUnit.baseData.skills[0];
-        int maxExpectedDamage = -1;
-
-        foreach (SkillData skill in _enemyUnit.baseData.skills)
+        SkillData selectedSkill = SelectEnemySkill(_enemyUnit, _playerUnit);
+        if (selectedSkill == null)
         {
-            int expectedDamage = BattleCalculator.CalculateDamage(_enemyUnit, _playerUnit, skill);
+            DetermineNextTurn();
+            yield break;
+        }
+
+        int damage = BattleCalculator.CalculateDamage(_enemyUnit, _playerUnit, selectedSkill);
+
+        if (_turnSpotlight != null) _turnSpotlight.gameObject.SetActive(false);
+        StartCoroutine(_actionHandler.PerformAttackAnim(_enemyUnit, _playerUnit, damage, selectedSkill, () => OnActionComplete(_playerUnit)));
+    }
+
+    private SkillData SelectEnemySkill(BattleUnit attacker, BattleUnit defender)
+    {
+        if (attacker == null || attacker.baseData == null) return null;
+        if (attacker.baseData.skills == null || attacker.baseData.skills.Count == 0) return null;
+
+        EnemyAiStyle aiStyle = attacker.baseData.enemyAiStyle;
+
+        switch (aiStyle)
+        {
+            case EnemyAiStyle.Aggressive:
+                return SelectMaxDamageSkill(attacker, defender);
+
+            case EnemyAiStyle.Tactical:
+                return SelectTacticalSkill(attacker, defender);
+
+            case EnemyAiStyle.Control:
+                return SelectControlSkill(attacker, defender);
+
+            case EnemyAiStyle.Defensive:
+                return SelectDefensiveSkill(attacker, defender);
+
+            case EnemyAiStyle.Random:
+                return SelectRandomSkill(attacker);
+
+            default:
+                return SelectMaxDamageSkill(attacker, defender);
+        }
+    }
+
+    private SkillData SelectMaxDamageSkill(BattleUnit attacker, BattleUnit defender)
+    {
+        SkillData bestSkill = attacker.baseData.skills[0];
+        int maxExpectedDamage = int.MinValue;
+
+        foreach (SkillData skill in attacker.baseData.skills)
+        {
+            int expectedDamage = BattleCalculator.CalculateDamage(attacker, defender, skill);
             if (expectedDamage > maxExpectedDamage)
             {
                 maxExpectedDamage = expectedDamage;
                 bestSkill = skill;
             }
         }
-        
-        if (_turnSpotlight != null) _turnSpotlight.gameObject.SetActive(false);
-        StartCoroutine(_actionHandler.PerformAttackAnim(_enemyUnit, _playerUnit, maxExpectedDamage, bestSkill, () => OnActionComplete(_playerUnit)));
+
+        return bestSkill;
+    }
+
+    private SkillData SelectTacticalSkill(BattleUnit attacker, BattleUnit defender)
+    {
+        SkillData bestSkill = attacker.baseData.skills[0];
+        float bestScore = float.MinValue;
+
+        foreach (SkillData skill in attacker.baseData.skills)
+        {
+            int expectedDamage = BattleCalculator.CalculateDamage(attacker, defender, skill);
+            float elemental = BattleCalculator.GetElementalMultiplier(skill.element, defender.baseData.element);
+
+            // 战术型：更重视属性克制
+            float score = expectedDamage + (elemental * 15f);
+
+            if (score > bestScore)
+            {
+                bestScore = score;
+                bestSkill = skill;
+            }
+        }
+
+        return bestSkill;
+    }
+
+    private SkillData SelectControlSkill(BattleUnit attacker, BattleUnit defender)
+    {
+        SkillData controlSkill = null;
+        int bestDamage = int.MinValue;
+
+        foreach (SkillData skill in attacker.baseData.skills)
+        {
+            bool hasEffect = skill != null && skill.efecto != null;
+            bool isControl = hasEffect &&
+                             (skill.efecto.objetivo == EffectTarget.Enemy || skill.efecto.objetivo == EffectTarget.Self) &&
+                             skill.efecto.stat != BattleStats.None;
+
+            if (!isControl) continue;
+
+            int expectedDamage = BattleCalculator.CalculateDamage(attacker, defender, skill);
+            if (expectedDamage > bestDamage)
+            {
+                bestDamage = expectedDamage;
+                controlSkill = skill;
+            }
+        }
+
+        // 没有控制技能就退回高伤策略
+        if (controlSkill != null) return controlSkill;
+        return SelectMaxDamageSkill(attacker, defender);
+    }
+
+    private SkillData SelectDefensiveSkill(BattleUnit attacker, BattleUnit defender)
+    {
+        bool lowHp = attacker.currentHP <= Mathf.RoundToInt(attacker.baseData.maxHP * 0.45f);
+
+        if (lowHp)
+        {
+            SkillData bestDefensive = null;
+            int bestDefensiveDamage = int.MinValue;
+
+            foreach (SkillData skill in attacker.baseData.skills)
+            {
+                bool hasEffect = skill != null && skill.efecto != null;
+                bool selfBuff = hasEffect &&
+                                skill.efecto.objetivo == EffectTarget.Self &&
+                                (skill.efecto.stat == BattleStats.Defense ||
+                                 skill.efecto.stat == BattleStats.MDefense ||
+                                 skill.efecto.stat == BattleStats.Speed);
+
+                if (!selfBuff) continue;
+
+                int expectedDamage = BattleCalculator.CalculateDamage(attacker, defender, skill);
+                if (expectedDamage > bestDefensiveDamage)
+                {
+                    bestDefensiveDamage = expectedDamage;
+                    bestDefensive = skill;
+                }
+            }
+
+            if (bestDefensive != null) return bestDefensive;
+        }
+
+        return SelectMaxDamageSkill(attacker, defender);
+    }
+
+    private SkillData SelectRandomSkill(BattleUnit attacker)
+    {
+        int index = Random.Range(0, attacker.baseData.skills.Count);
+        return attacker.baseData.skills[index];
     }
 
     private IEnumerator GameOverRoutine()

@@ -15,6 +15,7 @@ MonoBehaviour:
   _icon: {fileID: 0}
   _soulName: Isorock
   _element: 1
+  _enemyAiStyle: 4
   _maxHP: 100
   _attack: 8
   _defense: 20

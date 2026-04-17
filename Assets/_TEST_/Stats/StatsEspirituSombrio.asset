@@ -15,6 +15,7 @@ MonoBehaviour:
   _icon: {fileID: 0}
   _soulName: "Esp\xEDritu Sombr\xEDo"
   _element: 0
+  _enemyAiStyle: 3
   _maxHP: 75
   _attack: 9
   _defense: 5

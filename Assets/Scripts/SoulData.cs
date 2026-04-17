@@ -7,6 +7,9 @@ public class SoulData : ScriptableObject
     [SerializeField] private Sprite _icon;
     [SerializeField] private string _soulName;
     [SerializeField] private ElementType _element;
+
+    [Header("Enemy AI")]
+    [SerializeField] private EnemyAiStyle _enemyAiStyle = EnemyAiStyle.Aggressive;
     
     [Header("Stats")]
     [SerializeField] private int _maxHP;
@@ -22,6 +25,7 @@ public class SoulData : ScriptableObject
     public Sprite icon => _icon;
     public string soulName => _soulName;
     public ElementType element => _element;
+    public EnemyAiStyle enemyAiStyle => _enemyAiStyle;
     public int maxHP => _maxHP;
     public int attack => _attack;
     public int defense => _defense;
@@ -31,8 +35,7 @@ public class SoulData : ScriptableObject
     
     public List<SkillData> skills => _skills;
 
-
-    //Valores usados para los calculos en el combate y que variaran con modificadores segn el stat original
+    // Valores usados para cálculos en combate
     public int finalAttack { get; set; }
     public int finalMAttack { get; set; }
     public int finalDefense { get; set; }

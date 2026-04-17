@@ -15,6 +15,7 @@ MonoBehaviour:
   _icon: {fileID: 0}
   _soulName: Golem
   _element: 1
+  _enemyAiStyle: 3
   _maxHP: 40
   _attack: 10
   _defense: 8

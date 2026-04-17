@@ -15,6 +15,7 @@ MonoBehaviour:
   _icon: {fileID: 0}
   _soulName: "Or\xE1culo Espectral"
   _element: 0
+  _enemyAiStyle: 2
   _maxHP: 90
   _attack: 5
   _defense: 8
