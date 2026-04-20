@@ -12,7 +12,14 @@ public class BattleUnit : MonoBehaviour
  
     [Header("Local UI")]
     [SerializeField] private GameObject _localCombatUI; 
-    [SerializeField] private Slider _hpSlider;          
+    [SerializeField] private Slider _hpSlider;
+
+    //Valores variables basados en los del SoulData
+    public int finalAttack {  get; set; }
+    public int finalMAttack { get; set; }
+    public int finalDefense { get; set; }
+    public int finalMDefense { get; set; }
+    public int finalSpeed { get; set; }
 
     void Start()
     {
@@ -24,12 +31,12 @@ public class BattleUnit : MonoBehaviour
         }
 
         //Asignar valores finales
-        baseData.finalAttack = baseData.attack;
-        baseData.finalMAttack = baseData.magicAttack;
-        baseData.finalDefense = baseData.defense;
-        baseData.finalMDefense = baseData.magicDefense;
-        baseData.finalSpeed = baseData.speed;
-
+        finalAttack = baseData.attack;
+        finalMAttack = baseData.magicAttack;
+        finalDefense = baseData.defense;
+        finalMDefense = baseData.magicDefense;
+        finalSpeed = baseData.speed;
+        Debug.Log($"ataque final = {finalAttack} a partir de ataque inicial = {baseData.attack}");
         if (_localCombatUI != null) _localCombatUI.SetActive(false);
     }
 

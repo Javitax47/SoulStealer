@@ -30,32 +30,4 @@ public class SoulData : ScriptableObject
     public int speed => _speed;
     
     public List<SkillData> skills => _skills;
-
-
-    //Valores usados para los cálculos en el combate y que variarán con modificadores según el stat original
-    public int finalAttack
-    {
-        get { return finalAttack; } 
-        set { finalAttack = value; }
-    }
-    public int finalMAttack
-    {
-        get { return finalMAttack; }
-        set { finalMAttack = value; }
-    }
-    public int finalDefense
-    {
-        get { return finalDefense; }
-        set { finalDefense = value; }
-    }
-    public int finalMDefense
-    {
-        get { return finalMDefense; }
-        set { finalMDefense = value; }
-    }
-    public int finalSpeed
-    {
-        get { return finalSpeed; }
-        set { finalSpeed = value; }
-    }
 }

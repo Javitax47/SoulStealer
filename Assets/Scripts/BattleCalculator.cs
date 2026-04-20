@@ -18,8 +18,9 @@ public static class BattleCalculator
 
     public static int CalculateDamage(BattleUnit attacker, BattleUnit defender, SkillData skill)
     {
-        int atkStat = (skill.type == SkillType.Physical) ? attacker.baseData.attack : attacker.baseData.magicAttack;
-        int defStat = (skill.type == SkillType.Physical) ? defender.baseData.defense : defender.baseData.magicDefense;
+        //Toma los valores finales del BattleUnit para el cálculo y el daño
+        int atkStat = (skill.type == SkillType.Physical) ? attacker.finalAttack : attacker.finalMAttack;
+        int defStat = (skill.type == SkillType.Physical) ? defender.finalDefense : defender.finalMDefense;
 
         float baseDamage = Mathf.Max(1, atkStat * skill.power - defStat);
         float multiplier = GetElementalMultiplier(skill.element, defender.baseData.element);

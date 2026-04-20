@@ -22,8 +22,8 @@ public class BattleTurnManager : MonoBehaviour
     {
         while (_playerGauge < TURN_THRESHOLD && _enemyGauge < TURN_THRESHOLD)
         {
-            _playerGauge += Mathf.Max(1, player.baseData.speed);
-            _enemyGauge += Mathf.Max(1, enemy.baseData.speed);
+            _playerGauge += Mathf.Max(1, player.finalSpeed);
+            _enemyGauge += Mathf.Max(1, enemy.finalSpeed);
         }
 
         if (_playerGauge >= TURN_THRESHOLD && _enemyGauge >= TURN_THRESHOLD)
@@ -61,8 +61,8 @@ public class BattleTurnManager : MonoBehaviour
         {
             while (simPlayerGauge < TURN_THRESHOLD && simEnemyGauge < TURN_THRESHOLD)
             {
-                simPlayerGauge += Mathf.Max(1, player.baseData.speed);
-                simEnemyGauge += Mathf.Max(1, enemy.baseData.speed);
+                simPlayerGauge += Mathf.Max(1, player.finalSpeed);
+                simEnemyGauge += Mathf.Max(1, enemy.finalSpeed);
             }
 
             if (simPlayerGauge >= TURN_THRESHOLD && simEnemyGauge >= TURN_THRESHOLD)
